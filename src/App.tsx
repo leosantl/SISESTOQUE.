@@ -13,6 +13,7 @@ import Products from "./pages/Products";
 import ProductForm from "./pages/ProductForm";
 import Reports from "./pages/Reports";
 import Movements from "./pages/Movements";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +67,13 @@ const App = () => (
               <ProtectedRoute>
                 <AppLayout>
                   <Movements />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Settings />
                 </AppLayout>
               </ProtectedRoute>
             } />

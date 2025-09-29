@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, TrendingDown, AlertTriangle, DollarSign } from 'lucide-react';
+import { Package, TrendingDown, AlertTriangle, DollarSign, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { exportProducts, exportLowStockReport, exportExpiringReport } from '@/utils/exportData';
 
 interface Product {
   id: string;
@@ -30,7 +32,7 @@ export default function Reports() {
 
   const fetchProducts = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('products')
         .select('*')
         .eq('user_id', user!.id);
@@ -82,11 +84,39 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Relatórios</h1>
-        <p className="text-muted-foreground">
-          Visualize informações e análises do estoque
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Relatórios</h1>
+          <p className="text-muted-foreground">
+            Visualize informações e análises do estoque
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => exportProducts(products as any)}
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Exportar Produtos
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => exportLowStockReport(products as any)}
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Exportar Estoque Baixo
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => exportExpiringReport(products as any)}
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Exportar Vencimentos
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

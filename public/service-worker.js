@@ -77,26 +77,71 @@ self.addEventListener('fetch', (event) => {
 
 // Push notification event
 self.addEventListener('push', (event) => {
-  const options = {
-    body: event.data ? event.data.text() : 'Nova notificação do SISESTOQUE',
+  let title = 'SISESTOQUE';
+  let options = {
+    body: 'Nova notificação do sistema de estoque',
     icon: '/icon-192x192.png',
     badge: '/icon-192x192.png',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
       primaryKey: 1
-    }
+    },
+    actions: [
+      {
+        action: 'view',
+        title: 'Visualizar',
+        icon: '/icon-192x192.png'
+      },
+      {
+        action: 'close',
+        title: 'Fechar'
+      }
+    ]
   };
 
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      title = data.title || title;
+      options.body = data.body || options.body;
+      options.data = { ...options.data, ...data };
+    } catch (e) {
+      options.body = event.data.text();
+    }
+  }
+
   event.waitUntil(
-    self.registration.showNotification('SISESTOQUE', options)
+    self.registration.showNotification(title, options)
   );
 });
 
 // Notification click event
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(
-    clients.openWindow('/')
-  );
+  
+  if (event.action === 'view') {
+    event.waitUntil(
+      clients.openWindow('/dashboard')
+    );
+  } else if (event.action !== 'close') {
+    event.waitUntil(
+      clients.openWindow('/')
+    );
+  }
 });
+
+// Background sync for offline actions
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'background-sync') {
+    event.waitUntil(doBackgroundSync());
+  }
+});
+
+async function doBackgroundSync() {
+  // Sync any pending data when back online
+  console.log('Background sync triggered');
+  
+  // Here you could implement offline data synchronization
+  // For example, sending queued product updates to the server
+}

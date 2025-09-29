@@ -43,7 +43,7 @@ export default function ProductForm() {
 
   const fetchProduct = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('products')
         .select('*')
         .eq('id', id)
@@ -88,7 +88,7 @@ export default function ProductForm() {
       };
 
       if (isEditing) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('products')
           .update(productData)
           .eq('id', id);
@@ -100,7 +100,7 @@ export default function ProductForm() {
           description: "O produto foi atualizado com sucesso.",
         });
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('products')
           .insert([productData]);
 

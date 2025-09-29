@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Package, AlertTriangle, TrendingUp, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useNotifications } from '@/hooks/useNotifications';
 
 interface DashboardStats {
   totalProducts: number;
@@ -13,6 +14,7 @@ interface DashboardStats {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  useNotifications(); // Initialize notifications
   const [stats, setStats] = useState<DashboardStats>({
     totalProducts: 0,
     lowStockProducts: 0,
@@ -29,7 +31,7 @@ export default function Dashboard() {
 
   const fetchDashboardStats = async () => {
     try {
-      const { data: products, error } = await supabase
+      const { data: products, error } = await (supabase as any)
         .from('products')
         .select('*')
         .eq('user_id', user!.id);

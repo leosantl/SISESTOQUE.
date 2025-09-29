@@ -61,7 +61,7 @@ export default function Products() {
 
   const fetchProducts = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('products')
         .select('*')
         .eq('user_id', user!.id)
@@ -82,7 +82,7 @@ export default function Products() {
 
   const deleteProduct = async (id: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('products')
         .delete()
         .eq('id', id);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, Package, PlusCircle, FileText, Home } from 'lucide-react';
+import { BarChart3, Package, PlusCircle, FileText, Home, Settings, Activity } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -17,8 +17,9 @@ const menuItems = [
   { title: 'Dashboard', url: '/dashboard', icon: Home },
   { title: 'Produtos', url: '/products', icon: Package },
   { title: 'Novo Produto', url: '/products/new', icon: PlusCircle },
-  { title: 'Relatórios', url: '/reports', icon: FileText },
-  { title: 'Movimentações', url: '/movements', icon: BarChart3 },
+  { title: 'Movimentações', url: '/movements', icon: Activity },
+  { title: 'Relatórios', url: '/reports', icon: BarChart3 },
+  { title: 'Configurações', url: '/settings', icon: Settings },
 ];
 
 export function AppSidebar() {

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, TrendingUp, TrendingDown, Package } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Package, Download } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { exportMovements } from '@/utils/exportData';
 
 interface Movement {
   id: string;
@@ -67,7 +68,7 @@ export default function Movements() {
 
   const fetchMovements = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('stock_movements')
         .select(`
           *,
@@ -91,7 +92,7 @@ export default function Movements() {
 
   const fetchProducts = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('products')
         .select('id, name, code')
         .eq('user_id', user!.id);
@@ -111,7 +112,7 @@ export default function Movements() {
     e.preventDefault();
     
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('stock_movements')
         .insert([{
           product_id: formData.product_id,
@@ -169,89 +170,99 @@ export default function Movements() {
             Histórico de entradas e saídas de estoque
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Nova Movimentação
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nova Movimentação</DialogTitle>
-              <DialogDescription>
-                Registre uma entrada ou saída de estoque
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="product">Produto *</Label>
-                <Select
-                  value={formData.product_id}
-                  onValueChange={(value) => setFormData({ ...formData, product_id: value })}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um produto" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {products.map(product => (
-                      <SelectItem key={product.id} value={product.id}>
-                        {product.name} - {product.code}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => exportMovements(movements)}
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Exportar CSV
+          </Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Nova Movimentação
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nova Movimentação</DialogTitle>
+                <DialogDescription>
+                  Registre uma entrada ou saída de estoque
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="product">Produto *</Label>
+                  <Select
+                    value={formData.product_id}
+                    onValueChange={(value) => setFormData({ ...formData, product_id: value })}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um produto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.map(product => (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.name} - {product.code}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="movement_type">Tipo de Movimentação *</Label>
-                <Select
-                  value={formData.movement_type}
-                  onValueChange={(value) => setFormData({ ...formData, movement_type: value })}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="in">Entrada</SelectItem>
-                    <SelectItem value="out">Saída</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="movement_type">Tipo de Movimentação *</Label>
+                  <Select
+                    value={formData.movement_type}
+                    onValueChange={(value) => setFormData({ ...formData, movement_type: value })}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="in">Entrada</SelectItem>
+                      <SelectItem value="out">Saída</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="quantity">Quantidade *</Label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  min="1"
-                  value={formData.quantity}
-                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                  required
-                />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">Quantidade *</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="1"
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                    required
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="reason">Motivo</Label>
-                <Textarea
-                  id="reason"
-                  value={formData.reason}
-                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                  placeholder="Descreva o motivo da movimentação"
-                />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reason">Motivo</Label>
+                  <Textarea
+                    id="reason"
+                    value={formData.reason}
+                    onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                    placeholder="Descreva o motivo da movimentação"
+                  />
+                </div>
 
-              <div className="flex gap-4 justify-end pt-4">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit">Registrar</Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <div className="flex gap-4 justify-end pt-4">
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit">Registrar</Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {movements.length === 0 ? (
