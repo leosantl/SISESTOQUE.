@@ -1,8 +1,16 @@
+/**
+ * Arquivo de entrada principal da aplicação SISESTOQUE
+ * Responsável por inicializar o React e registrar o Service Worker para PWA
+ */
+
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-// Register Service Worker for PWA
+/**
+ * Registro do Service Worker para funcionalidade PWA
+ * O Service Worker permite que o app funcione offline e seja instalável
+ */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
@@ -16,11 +24,15 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Request notification permission
+/**
+ * Solicitação de permissão para notificações do navegador
+ * Permite enviar alertas sobre estoque baixo e produtos vencendo
+ */
 if ('Notification' in window && navigator.serviceWorker) {
   Notification.requestPermission().then((permission) => {
     console.log('Permissão de notificação:', permission);
   });
 }
 
+// Renderiza o componente principal da aplicação no elemento root do HTML
 createRoot(document.getElementById("root")!).render(<App />);

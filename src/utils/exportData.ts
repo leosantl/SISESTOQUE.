@@ -1,3 +1,11 @@
+/**
+ * Utilitários para exportação de dados em formato CSV
+ * Permite exportar produtos, movimentações e relatórios
+ */
+
+/**
+ * Interface que define a estrutura de um produto
+ */
 interface Product {
   id: string;
   name: string;
@@ -10,6 +18,9 @@ interface Product {
   created_at: string;
 }
 
+/**
+ * Interface que define a estrutura de uma movimentação de estoque
+ */
 interface Movement {
   id: string;
   movement_type: string;
@@ -22,14 +33,21 @@ interface Movement {
   };
 }
 
+/**
+ * Função genérica para exportar dados em formato CSV
+ * 
+ * @param data - Array de objetos com os dados a serem exportados
+ * @param filename - Nome base do arquivo (data será adicionada automaticamente)
+ * @param headers - Array com os nomes das colunas do CSV
+ */
 export function exportToCSV(data: any[], filename: string, headers: string[]) {
-  // Create CSV content
+  // Cria o conteúdo do CSV
   const csvContent = [
-    headers.join(','),
+    headers.join(','), // Linha de cabeçalho
     ...data.map(row => 
       headers.map(header => {
         const value = getNestedValue(row, header);
-        // Escape commas and quotes in values
+        // Escapa vírgulas e aspas nos valores para compatibilidade CSV
         if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
           return `"${value.replace(/"/g, '""')}"`;
         }
@@ -38,13 +56,14 @@ export function exportToCSV(data: any[], filename: string, headers: string[]) {
     )
   ].join('\n');
 
-  // Create and download file
+  // Cria e faz download do arquivo
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   
   if (link.download !== undefined) {
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
+    // Adiciona data atual ao nome do arquivo
     link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
@@ -53,6 +72,14 @@ export function exportToCSV(data: any[], filename: string, headers: string[]) {
   }
 }
 
+/**
+ * Função auxiliar para acessar valores aninhados em objetos
+ * Permite acessar propriedades como "products.name"
+ * 
+ * @param obj - Objeto contendo os dados
+ * @param path - Caminho para a propriedade (ex: "products.name")
+ * @returns Valor da propriedade ou undefined
+ */
 function getNestedValue(obj: any, path: string): any {
   return path.split('.').reduce((current, key) => current?.[key], obj);
 }

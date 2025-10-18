@@ -1,27 +1,48 @@
+/**
+ * Hook personalizado de autenticação
+ * Gerencia todo o estado de autenticação da aplicação usando Supabase Auth
+ */
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+/**
+ * Interface que define o tipo do contexto de autenticação
+ * Contém o usuário atual, sessão e funções de autenticação
+ */
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
-  signOut: () => Promise<void>;
+  user: User | null;                                                    // Usuário autenticado ou null
+  session: Session | null;                                              // Sessão ativa ou null
+  loading: boolean;                                                     // Estado de carregamento
+  signIn: (email: string, password: string) => Promise<{ error: any }>; // Função de login
+  signUp: (email: string, password: string) => Promise<{ error: any }>; // Função de cadastro
+  signOut: () => Promise<void>;                                         // Função de logout
 }
 
+// Criação do contexto de autenticação
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * Provedor do contexto de autenticação
+ * Componente que envolve a aplicação e fornece o contexto de autenticação
+ * 
+ * @param children - Componentes filhos que terão acesso ao contexto
+ */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // Estados locais para armazenar informações de autenticação
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  /**
+   * Effect que configura o listener de mudanças no estado de autenticação
+   * Executa quando o componente é montado
+   */
   useEffect(() => {
-    // Set up auth state listener
+    // Configura listener para mudanças no estado de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
@@ -30,16 +51,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Check for existing session
+    // Verifica se já existe uma sessão ativa ao carregar a página
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
+    // Cleanup: cancela a inscrição ao desmontar o componente
     return () => subscription.unsubscribe();
   }, []);
 
+  /**
+   * Função de login do usuário
+   * Autentica o usuário com email e senha usando Supabase
+   * 
+   * @param email - Email do usuário
+   * @param password - Senha do usuário
+   * @returns Objeto com possível erro da operação
+   */
   const signIn = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -47,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
       });
       
+      // Exibe toast de erro se houver falha no login
       if (error) {
         toast({
           title: "Erro no login",
@@ -57,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return { error };
     } catch (error: any) {
+      // Tratamento de erros inesperados
       toast({
         title: "Erro no login",
         description: "Ocorreu um erro inesperado",
@@ -66,8 +98,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Função de cadastro de novo usuário
+   * Cria uma nova conta de usuário no Supabase
+   * 
+   * @param email - Email para cadastro
+   * @param password - Senha para cadastro
+   * @returns Objeto com possível erro da operação
+   */
   const signUp = async (email: string, password: string) => {
     try {
+      // Define URL de redirecionamento após confirmação do email
       const redirectUrl = `${window.location.origin}/dashboard`;
       
       const { error } = await supabase.auth.signUp({
@@ -78,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       });
       
+      // Exibe mensagem de erro ou sucesso
       if (error) {
         toast({
           title: "Erro no cadastro",
@@ -93,6 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return { error };
     } catch (error: any) {
+      // Tratamento de erros inesperados
       toast({
         title: "Erro no cadastro",
         description: "Ocorreu um erro inesperado",
@@ -102,6 +145,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Função de logout do usuário
+   * Encerra a sessão atual do usuário
+   */
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -113,6 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
     } catch (error: any) {
+      // Tratamento de erros inesperados
       toast({
         title: "Erro ao sair",
         description: "Ocorreu um erro inesperado",
@@ -121,6 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Objeto com todos os valores do contexto
   const value = {
     user,
     session,
@@ -133,6 +182,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+/**
+ * Hook customizado para acessar o contexto de autenticação
+ * Deve ser usado dentro de um componente envolvido pelo AuthProvider
+ * 
+ * @returns Objeto com estado e funções de autenticação
+ * @throws Error se usado fora do AuthProvider
+ */
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
