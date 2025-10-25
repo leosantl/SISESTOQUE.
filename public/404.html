@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0;url=/" />
+    <title>Redirecionando...</title>
+  </head>
+  <body>
+    <script>
+      // Redireciona para a página inicial mantendo o caminho
+      sessionStorage.redirect = location.pathname;
+      location.replace('/');
+    </script>
+  </body>
+</html>
